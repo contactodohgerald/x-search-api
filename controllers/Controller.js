@@ -9,14 +9,14 @@ class Controller {
 
     }
 
-    getLoggedInUser = async (req, res) => {
+    getLoggedInUser = expressAsyncHandler(async (req, res) => {
     
         const user = await services._select(users, "email", req.email);
         if(user == null)
             return res.status(400).json({message: "User not found"});
             
         return res.status(200).json({message: "Date was returned", data: user});
-    }
+    })
 
     updatePassword = expressAsyncHandler(async (req, res) => {
         const {cur_password, password, c_password} = req.body;
