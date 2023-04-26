@@ -23,6 +23,7 @@ router.post('/auth/reset-password', authenticateToken, controller.resetPassword)
 //subscription section
 router.get('/get-plans', SubscriptionController.getPlans)
 router.post('/create-subscription', authenticateToken, SubscriptionController.subscribeNewUser)
+router.post('/verify-payment', authenticateToken, SubscriptionController.verifyPament)
 
 
 export default router;
