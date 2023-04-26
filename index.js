@@ -1,10 +1,11 @@
-require('dotenv').config();
-const express = require('express')
-const http = require('http')
-const cors = require('cors')
+import express from 'express'
+import http from 'http'
+import cors from 'cors'
+import dotenv from 'dotenv';
+dotenv.config();
 
-const connection = require('./database/connection')
-const handleRoutes = require('./routes/api')
+import connection from './database/connection.js';
+import handleRoutes from './routes/api.js';
 
 const app = express()
 app.use(cors());

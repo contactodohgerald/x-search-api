@@ -1,6 +1,7 @@
 {
   "name": "x-search",
   "version": "1.0.0",
+  "type": "module",
   "description": "x-search stives to solves the issue of generating cover letter to smotten your job hunt accross different industries",
   "main": "index.js",
   "scripts": {
@@ -24,8 +25,10 @@
     "express": "^4.18.2",
     "express-async-handler": "^1.2.0",
     "fs": "^0.0.1-security",
+    "got": "^12.6.0",
     "handlebars": "^4.7.7",
     "http": "^0.0.1-security",
+    "https": "^1.0.0",
     "jsonwebtoken": "^9.0.0",
     "moment": "^2.29.4",
     "mysql": "^2.18.1",

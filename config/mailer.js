@@ -1,11 +1,14 @@
-require('dotenv').config();
-const nodemailer = require("nodemailer");
-const handlebars = require('handlebars');
-const fs = require('fs');
-
-const date = new Date()
+import nodemailer from "nodemailer";
+import handlebars from 'handlebars';
+import fs from 'fs';
+import dotenv from 'dotenv';
+dotenv.config();
 
 class sendMail{
+
+  constructor() {
+    this.date = new Date()
+  }
 
   readHTMLFile = function(path, callback) {
     fs.readFile(path, {encoding: 'utf-8'}, function (err, html) {
@@ -24,7 +27,7 @@ class sendMail{
       sitemail: process.env.APP_EMAIL, 
       sitelogo: process.env.APP_LOGO, 
       siteaddress:process.env.APP_ADDRESS, 
-      currentyear: date.getFullYear()
+      currentyear: this.date.getFullYear()
     });
     
     // create reusable transporter object using the default SMTP transport
@@ -62,5 +65,4 @@ class sendMail{
 }
 
 const mailer = new sendMail();
-
-module.exports = mailer;
+export default mailer;

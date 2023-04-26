@@ -1,11 +1,7 @@
-const { v4: uuidv4 } = require('uuid');
-const connection = require('../database/connection')
+import { v4 as uuidv4 } from 'uuid';
+import connection from '../database/connection.js';
 
 class Services {
-
-  constructor() {
-        
-  }
 
   _validateEmail = (email) => {
     return String(email).toLowerCase()
@@ -34,7 +30,6 @@ class Services {
     return new Promise((resolve, reject) => {
       connection.query('INSERT INTO '+table+' SET ?', data, function (error, results) {
         if (error){
-          console.log('error', error)
           reject(error);
         }else{
           resolve(results)
@@ -44,11 +39,15 @@ class Services {
   }
     
   _select_all = (table) => {
-      connection.query('SELECT * FROM '+table, function (error, results, fields) {
-        // error will be an Error if one occurred during the query
-        if (error) throw error
-        // results will contain the results of the query
-        return results;
+      return new Promise((resolve, reject) => {
+        connection.query(`SELECT * FROM ${table}`, function (error, results) {
+          if (error) {
+            console.log('error', error);
+            reject(error);
+          } else {
+            resolve(results);
+          }
+        });
       });
   }
 
@@ -56,7 +55,6 @@ class Services {
     return new Promise((resolve, reject) => {
       connection.query(`SELECT * FROM ${table} WHERE ${clause} = ?`, value, function (error, results) {
         if (error) {
-          console.log('error', error);
           reject(error);
         } else {
           resolve(results[0]);
@@ -69,7 +67,6 @@ class Services {
     return new Promise((resolve, reject) => {
       connection.query(`SELECT * FROM ${table} ${clause}`, values, function (error, results) {
         if (error) {
-          console.log('error', error);
           reject(error);
         } else {
           resolve(results[0]);
@@ -82,7 +79,6 @@ class Services {
     return new Promise((resolve, reject) => {
       connection.query('UPDATE '+table+' SET ? WHERE ?', data, function (error, results) {
         if (error){
-          console.log('error', error)
           reject(error);
         }else{
           resolve(results)
@@ -94,5 +90,4 @@ class Services {
 }
 
 const services = new Services()
-
-module.exports = services
+export default services

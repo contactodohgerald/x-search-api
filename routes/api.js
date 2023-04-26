@@ -1,7 +1,7 @@
-const AuthRoute = require('./authRouter');
+import router from './router.js';
 
-const CombineRouter = (app) => {
-    app.use('/api/v1/auth/', AuthRoute);
+const handleRoutes = (app) => {
+    app.use('/api/v1/', router);
 }
 
-module.exports = CombineRouter;
+export default handleRoutes;

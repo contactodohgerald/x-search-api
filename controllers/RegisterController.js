@@ -1,14 +1,10 @@
-const expressAsyncHandler = require("express-async-handler");
-const bcrypt = require("bcrypt");
-const services = require("../config/services");
-const {users, verification} = require("../database/tables");
-const mailer = require("../config/mailer");
+import expressAsyncHandler from "express-async-handler";
+import bcrypt from "bcrypt";
+import services from "../config/services.js";
+import tables from "../database/tables.js";
+import mailer from "../config/mailer.js";
 
 class RegisterController {
-
-    constructor() {
-
-    }
 
     createNewUser = expressAsyncHandler(async (req, res) => {
         const {fullname, email, username, password, c_password, ip_address} = req.body
@@ -22,14 +18,14 @@ class RegisterController {
         }
     
         // check if email already in database 
-        const emailExit = await services._select(users, 'email', email); 
+        const emailExit = await services._select(tables.users, 'email', email); 
         if(emailExit != null){
             if(emailExit.email == email)
                return res.status(400).json({message: "Email already in use, please try another"}) 
         }
 
         // check if username already in database 
-        const usernameExit = await services._select(users, 'username', username);   
+        const usernameExit = await services._select(tables.users, 'username', username);   
         if(usernameExit != null){
             if(usernameExit.username == username)
                 return res.status(400).json({message: "Username already in use, please try another"})
@@ -41,7 +37,7 @@ class RegisterController {
             uuid: _uuid, name: fullname, email, username, ip_address, password: hashPassword
         }
         
-        const createUser = await services._insert(users, userData);
+        const createUser = await services._insert(tables.users, userData);
         if(createUser != null){
             //create and send out a verification notification to user 
             const verifyCode = services._verifyCode();
@@ -57,7 +53,7 @@ class RegisterController {
                 const verificationData = {
                     uuid: services._uuid(), user_id: _uuid, code: verifyCode, verify_type: 'account-verification'
                 }
-                services._insert(verification, verificationData);
+                services._insert(tables.verification, verificationData);
             }
             res.status(201).json({ status: 'success', message: "User was successfully created", data: {
                 fullname, email, username
@@ -70,5 +66,4 @@ class RegisterController {
 }
 
 const register = new RegisterController();
-
-module.exports = register 
+export default register 

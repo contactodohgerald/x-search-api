@@ -1,6 +1,6 @@
-const moment = require("moment");
-const { verification } = require("../database/tables");
-const services = require("./services");
+import moment from "moment";
+import tables from "../database/tables.js";
+import services from "../config/services.js";
 
 class Verifiable {
 
@@ -13,7 +13,7 @@ class Verifiable {
         const duration = moment.duration(this.now.diff(data.created_at));
         const hoursDiff = Math.floor(duration.asHours());
         if(hoursDiff > 1){
-            await services._update(verification, [{status: 'failed'}, {uuid: data.uuid}]);
+            await services._update(tables.verification, [{status: 'failed'}, {uuid: data.uuid}]);
             return false;
         }
 
@@ -23,4 +23,4 @@ class Verifiable {
 }
 
 const verifiable = new Verifiable();
-module.exports = verifiable;
+export default verifiable;

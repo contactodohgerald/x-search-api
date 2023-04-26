@@ -1,13 +1,10 @@
-const expressAsyncHandler = require("express-async-handler");
-const jwt = require("jsonwebtoken");
-const bcrypt = require("bcrypt");
-const services = require("../config/services");
-const { users } = require("../database/tables");
+import expressAsyncHandler from "express-async-handler";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import services from "../config/services.js";
+import tables from "../database/tables.js";
 
 class LoginController {
-    constructor() {
-
-    }
 
     loginUser = expressAsyncHandler(async (req, res) => {
         const {credential, password} = req.body;
@@ -18,9 +15,9 @@ class LoginController {
         const email = services._validateEmail(credential);  
         var user = null;
         if(email){
-            user = await services._select(users, "email", credential);
+            user = await services._select(tables.users, "email", credential);
         }else{
-            user = await services._select(users, "username", credential);
+            user = await services._select(tables.users, "username", credential);
         }        
         if(user == null)  
             return res.status(400).json({message: "Either email or username does not exist"});
@@ -50,7 +47,8 @@ class LoginController {
         };
         return res.status(200).json({message: "Login was successful", data: loggedInUser })
     });
+    
 }
 
 const login = new LoginController();
-module.exports = login;
+export default login;
