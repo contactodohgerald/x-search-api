@@ -33,27 +33,37 @@ class RegisterController {
 
         const hashPassword = await bcrypt.hash(password, 10);
         const _uuid = services._uuid();
-        const userData = {
-            uuid: _uuid, name: fullname, email, username, ip_address, password: hashPassword
-        }
         
-        const createUser = await services._insert(tables.users, userData);
+        const createUser = await services._insert(tables.users, {
+            uuid: _uuid,
+            name: fullname, 
+            email, username, 
+            password: hashPassword
+        });
         if(createUser != null){
+            await services._insert(tables.searchTrack, {
+                uuid: services._uuid(), 
+                user_id: _uuid, 
+                ip_address, 
+                request_count: 0
+            });
             //create and send out a verification notification to user 
             const verifyCode = services._verifyCode();
             //send out notification
-            const data = {
+            const sentMail = await mailer.pushMail("/../resource/emails/confirm-email.html", {
                 name: fullname, 
                 message: "Thank you for choosing F-Search, Your one-time verification code is: ",
                 code: verifyCode, 
     
-            };
-            const sentMail = await mailer.pushMail("/../resource/emails/confirm-email.html", data, email, "Account Verification!")
+            }, email, "Account Verification!")
+            //create a verification object on the verification table
             if(sentMail.accepted.length > 0){
-                const verificationData = {
-                    uuid: services._uuid(), user_id: _uuid, code: verifyCode, verify_type: 'account-verification'
-                }
-                services._insert(tables.verification, verificationData);
+                await services._insert(tables.verification, {
+                    uuid: services._uuid(), 
+                    user_id: _uuid, 
+                    code: verifyCode, 
+                    verify_type: 'account-verification'
+                });
             }
             res.status(201).json({ status: 'success', message: "User was successfully created", data: {
                 fullname, email, username

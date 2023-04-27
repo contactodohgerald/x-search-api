@@ -6,6 +6,7 @@ import verify  from "../controllers/VerificationController.js";
 import login  from "../controllers/LoginController.js";
 import controller  from "../controllers/Controller.js";
 import SubscriptionController  from "../controllers/SubscriptionController.js";
+import SearchQueryController  from "../controllers/SearchQueryController.js";
 
 const router = express.Router();
 
@@ -24,6 +25,9 @@ router.post('/auth/reset-password', authenticateToken, controller.resetPassword)
 router.get('/get-plans', SubscriptionController.getPlans)
 router.post('/create-subscription', authenticateToken, SubscriptionController.subscribeNewUser)
 router.post('/verify-payment', authenticateToken, SubscriptionController.verifyPament)
+
+//search query section
+router.post('/search-query', authenticateToken, SearchQueryController.getSearchQuery)
 
 
 export default router;

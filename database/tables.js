@@ -2,8 +2,8 @@ const tables = {
     users: "user",
     verification: "verification",
     subscribe: "subscriptions",
-    searches: "search-history",
-    searchTrack: "search-track",
+    searches: "searchhistory",
+    searchTrack: "searchtrack ",
     subscribePlans: "plans",
     transactions: "transactions",
 }

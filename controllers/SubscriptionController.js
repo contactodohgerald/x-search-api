@@ -2,6 +2,7 @@ import expressAsyncHandler from "express-async-handler";
 import tables from "../database/tables.js";
 import services from "../config/services.js";
 import flutterwave from "../config/flutterwave.js";
+import mailer from "../config/mailer.js";
 
 class SubscriptionController {
 
@@ -30,15 +31,6 @@ class SubscriptionController {
     
         if(type == 'flutterwave'){
             const _uuid = services._uuid();
-            const desc =  "Request on subscription for "+plans.name+" Plan";
-            const requestBody = {
-                "id": plans.id,
-                "amount": plans.amount,
-                "name": user.name,
-                "email": user.email,
-                "uuid": _uuid,
-                "desc": desc
-            }
 
             await services._insert(tables.subscribe, {
                 uuid: _uuid,
@@ -48,7 +40,15 @@ class SubscriptionController {
                 plan_status: 'pending',
             });
 
-            const response = await flutterwave.makePayment(requestBody);
+            const desc =  "Request on subscription for "+plans.name+" Plan";
+            const response = await flutterwave.makePayment({
+                "id": plans.id,
+                "amount": plans.amount,
+                "name": user.name,
+                "email": user.email,
+                "uuid": _uuid,
+                "desc": desc
+            });
             if(!response)
                 return res.status(503).json({message: "An error occured, try again later"});
 
@@ -85,22 +85,36 @@ class SubscriptionController {
         const response = await flutterwave.verifyPayment(transaction_id); 
         if(response != null && response.data.status == "successful" 
             && response.data.amount == trans.amount  && response.data.currency == trans.currency){
-            // Success! Confirm the customer's payment
+            // update the status column on the transaction table
             await services._update(tables.transactions, [{status: 'success'}, {uuid: trans.uuid}]);
 
-            await services._update(tables.subscribe, [{status: 'ongoing'}, {uuid: trans.trans_ref}]);
-            const message = "Subscription to "+plans.name+" plan";
+            //get the subsscription object, so we can get the plans object from it
+            const subscribed = await services._select(tables.subscribe, "uuid", trans.trans_ref);
+            //get the plans object
+            const plans = await services._select(tables.subscribePlans, "uuid", subscribed.plan_id);
+            //get user object
             const user = await services._select(tables.users, "uuid", trans.user_id);
+            //update the plan status column on the subscription table
+            await services._update(tables.subscribe, [{plan_status: 'ongoing', status: true}, {uuid: subscribed.uuid}]);
+            //reset the search-track table of the user
+            await services._update(tables.searchTrack, [{request_count: 0}, {user_id: user.uuid}]);
+            
+            const message = "Subscription to "+plans.name+" plan";
             //send notice mail to user
             if(user.notify_type == 'mail'){
-                const data = {
+                await mailer.pushMail("/../resource/emails/subscription.html", {
+                    title: message,
                     username: user.username,
                     planname : plans.name,
                     amount: plans.amount
-                };
-                await mailer.pushMail("/../resource/emails/subscription.html", data, user.email, message)
+                }, user.email, message)
             }
-            return res.status(200).json({message: "Your "+message+" was successful", data: subscription});            
+
+            return res.status(200).json({message: "Your "+message+" was successful", data: {
+                uuid: subscribed.uuid,
+                user_id: subscribed.user_id,
+                plan_id: subscribed.plan_id
+            }});            
         }else{
             // Inform the customer their payment was unsuccessful
             await services._update(tables.transactions, [{status: 'failed'}, {uuid: trans.uuid}]);
