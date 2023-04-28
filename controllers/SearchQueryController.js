@@ -1,10 +1,12 @@
 import expressAsyncHandler from "express-async-handler";
 import checks from "../config/checks.js";
 import _openai from "../config/openai.js";
+import tables from "../database/tables.js";
+import services from "../config/services.js";
 
 class SearchQueryController {
 
-    getSearchQuery = expressAsyncHandler(async (req, res) => {
+    authGenerateCoverLetter = expressAsyncHandler(async (req, res) => {
         const { query } = req.body;
 
         if(!query)
@@ -29,14 +31,72 @@ class SearchQueryController {
             //update the searchtrack table and return query answer
             await checks.updateSearchTrack(req.email);
             return res.status(200).json({message: "Cover Letter Generated", data: {
-                query: ifQueryExist.query,
+                query: newQuery,
                 answer: ifQueryExist.answer,
             }});
         }
 
         const response = await _openai.generateCoverLetter(newQuery);
+        if(response.status != 200)
+            return res.status(503).json({message: "Our third party gatway is down at the moment, try again later"});
 
-        return res.status(200).json({message: "testing", data: response});
+        const answer = response.data.choices[0].text.trim();   
+        await checks.updateSearchTrack(req.email);
+        //add the search result to searches-history tour
+        await checks.createSearchHistory(newQuery, answer, req.email);
+        return res.status(200).json({message: "Cover Letter Generated", data: {
+            query: newQuery,
+            answer,
+        }});
+    });
+
+    freeTierGenerateCoverLetter = expressAsyncHandler(async (req, res) => {
+        const { query, ip_address } = req.body;
+
+        if(!query || !ip_address)
+            return res.status(400).json({message: "Please provide a search query"});
+
+        //check for query length and convert the search query to lowercase    
+        const newQuery = checks.checkQueryLength(query);
+        if(!newQuery)
+            return res.status(400).json({message: "Your search query doesn't look constructive enough, please provide more keywords for better and wider search result"});
+
+        //check if free tier is still up
+        const trackCount = await checks.getSearchTrack(ip_address, "free");
+        if(trackCount == null) {
+            await services._insert(tables.searchTrack, {
+                uuid: services._uuid(), ip_address, request_count: 1
+            });
+        }else{
+            if(trackCount.request_count >= process.env.FREE_TIER){
+                return res.status(400).json({message: "You have exhusted your free tier, Please endevor to subscribed to any of our plans and try again later"});
+            }
+
+            //update the searchtrack table and return query answer
+            const newCount = parseInt(trackCount.request_count) + 1;
+            await services._update(tables.searchTrack, [{request_count: newCount}, {ip_address: ip_address}]);
+        }
+
+        //first check if the query already exist in the searches table
+        const ifQueryExist = await checks.checkIfQueryExist(newQuery);
+        if(ifQueryExist != null){
+            return res.status(200).json({message: "Cover Letter Generated", data: {
+                query: newQuery,
+                answer: ifQueryExist.answer,
+            }});
+        }
+
+        const response = await _openai.generateCoverLetter(newQuery);
+        if(response.status != 200)
+            return res.status(503).json({message: "Our third party gatway is down at the moment, try again later"});
+
+        const answer = response.data.choices[0].text.trim();
+        //add the search result to searches-history tour
+        await checks.createSearchHistory(newQuery, answer, ip_address, 'free');
+        return res.status(200).json({message: "Cover Letter Generated", data: {
+            query: newQuery,
+            answer,
+        }});
     });
 }
 

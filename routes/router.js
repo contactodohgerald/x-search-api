@@ -27,7 +27,8 @@ router.post('/create-subscription', authenticateToken, SubscriptionController.su
 router.post('/verify-payment', authenticateToken, SubscriptionController.verifyPament)
 
 //search query section
-router.post('/search-query', authenticateToken, SearchQueryController.getSearchQuery)
+router.post('/search-query-auth', authenticateToken, SearchQueryController.authGenerateCoverLetter)
+router.post('/search-query-free', SearchQueryController.freeTierGenerateCoverLetter)
 
 
 export default router;

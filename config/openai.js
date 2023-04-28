@@ -12,14 +12,14 @@ class OpenAiHandler {
         this.openai = new OpenAIApi(configuration);
     }
 
-    generateCoverLetter = async (prompt, length = 10) => {
+    generateCoverLetter = async (prompt) => {
         const response = await this.openai.createCompletion({
-            model: "davinci",
+            model: "text-davinci-003",
             prompt,
             temperature: 0,
-            max_tokens: length,
+            max_tokens: 1024,
         });
-        console.log('first', response);
+
         return response;
     }
 

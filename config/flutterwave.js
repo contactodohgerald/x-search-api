@@ -10,10 +10,11 @@ class PaymentHandler {
             Authorization: `Bearer ${process.env.FLW_SECRET_KEY}`
         };
         this.flw = new Flutterwave(process.env.FLW_PUBLIC_KEY, process.env.FLW_SECRET_KEY);
+        this.url = "https://api.flutterwave.com/v3/payments";
     }
     makePayment = async (data) => {
         try {
-            return await got.post("https://api.flutterwave.com/v3/payments", {
+            return await got.post(this.url, {
                 headers: this.header,
                 json: {
                     tx_ref: data.uuid, 
