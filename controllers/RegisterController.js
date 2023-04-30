@@ -49,10 +49,11 @@ class RegisterController {
             });
             //create and send out a verification notification to user 
             const verifyCode = services._verifyCode();
+            const sitename = services._sitedetails()
             //send out notification
             const sentMail = await mailer.pushMail("/../resource/emails/confirm-email.html", {
                 name: fullname, 
-                message: "Thank you for choosing F-Search, Your one-time verification code is: ",
+                message: "Thank you for choosing "+sitename[0].name+", Your one-time verification code is: ",
                 code: verifyCode, 
     
             }, email, "Account Verification!")

@@ -17,6 +17,7 @@ router.post('/auth/resend-code', verify.sendVerifyCode)
 router.post('/auth/login-user', login.loginUser)
 
 //user profile section
+router.get('/site-details', controller.getSiteDetails)
 router.get('/get-user', authenticateToken, controller.getLoggedInUser)
 router.post('/auth/update-password', authenticateToken, controller.updatePassword)
 router.post('/auth/reset-password', authenticateToken, controller.resetPassword)

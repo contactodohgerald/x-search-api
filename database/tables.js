@@ -6,6 +6,7 @@ const tables = {
     searchTrack: "searchtrack ",
     subscribePlans: "plans",
     transactions: "transactions",
+    siteDetails: "sitedetails",
 }
 
 export default tables;

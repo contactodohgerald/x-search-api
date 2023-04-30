@@ -66,6 +66,15 @@ class Controller {
 
         return res.status(200).json({message: "Password has been successfully reset" });
     });
+
+    getSiteDetails = expressAsyncHandler(async (req, res) => {
+    
+        const siteDetails = await services._sitedetails();
+        if(siteDetails == null)
+            return res.status(400).json({message: "Data not found"});
+            
+        return res.status(200).json({message: "Date was returned", data: siteDetails[0]});
+    })
 }
 
 const controller = new Controller();

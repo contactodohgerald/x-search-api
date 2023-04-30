@@ -36,11 +36,11 @@ class VerificationController {
         await services._update(tables.verification, [{status: 'used'}, {uuid: responseData.uuid}]);
 
         if(type == 'account-verification'){
-            const data = {
+            const sitename = await services._sitedetails();
+            await mailer.pushMail("/../resource/emails/welcome.html", {
                 username: user.username,
                 email: user.email,
-            };
-            await mailer.pushMail("/../resource/emails/welcome.html", data, user.email, "Welcome to F-Search")
+            }, user.email, "Welcome to "+sitename[0].name)
         }
         return res.status(201).json({ status: 'success', message: "Your account was successfully activated, login to continue"})
     });

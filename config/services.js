@@ -1,7 +1,12 @@
 import { v4 as uuidv4 } from 'uuid';
 import connection from '../database/connection.js';
+import tables from '../database/tables.js';
 
 class Services {
+
+  _sitedetails = async () => {
+    return await services._select_all(tables.siteDetails); 
+  }
 
   _validateEmail = (email) => {
     return String(email).toLowerCase()
