@@ -27,7 +27,7 @@ class LoginController {
             return res.status(400).json({message: "Incorrect password"});
         
         if(user.verified_at == null)  
-            return res.status(400).json({message: "Account not activated, please activate your account to continue"});
+            return res.status(400).json({message: "Account not activated yet", data: user.uuid});
 
         const accessToken = jwt.sign({
             username: user.username, 
@@ -39,13 +39,12 @@ class LoginController {
 
         const loggedInUser = {
             uuid: user.uuid,
-            name: user.name,
             username: user.username,
             email: user.email,
             ip_address: user.ip_address,
             token: accessToken
         };
-        return res.status(200).json({message: "Login was successful", data: loggedInUser })
+        return res.status(200).json({status: 'success', message: "Login was successful", data: loggedInUser })
     });
     
 }

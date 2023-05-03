@@ -53,7 +53,7 @@ class RegisterController {
             //send out notification
             const sentMail = await mailer.pushMail("/../resource/emails/confirm-email.html", {
                 name: fullname, 
-                message: "Thank you for choosing "+sitename[0].name+", Your one-time verification code is: ",
+                message: "Thank you for choosing "+sitename.name+", Your one-time verification code is: ",
                 code: verifyCode, 
     
             }, email, "Account Verification!")
@@ -67,7 +67,7 @@ class RegisterController {
                 });
             }
             res.status(201).json({ status: 'success', message: "User was successfully created", data: {
-                fullname, email, username
+                fullname, email, username, uuid: _uuid
             }})
         }else{
            return res.status(505).json({message: "An error occured, request couldn't be completed"})

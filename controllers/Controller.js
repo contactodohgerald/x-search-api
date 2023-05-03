@@ -47,13 +47,13 @@ class Controller {
         if(password != c_password)
             return res.status(400).json({message: "Password does not match confirm Password"});
 
-        const user = await services._select(tables.users, "email", req.email);
-        if(user == null)
-            return res.status(400).json({message: "An error occured, try again later"});
-         
-        const verifications = await services.multiple_select(tables.verification, "WHERE user_id = ? AND verify_type = ? AND code = ?", [user.uuid, 'reset-password', code]);
+        const verifications = await services.multiple_select(tables.verification, "WHERE verify_type = ? AND code = ?", ['reset-password', code]);
         if(verifications == null)
             return res.status(400).json({message: "Invalid code supplied, please try a different code"});
+
+        const user = await services._select(tables.users, "uuid", verifications.user_id);
+        if(user == null)
+            return res.status(400).json({message: "An error occured, try again later"});
 
         const verify_date = await verifiable.verifyDate(verifications);
         if(!verify_date)
@@ -64,7 +64,7 @@ class Controller {
 
         await services._update(tables.verification, [{status: 'used'}, {uuid: verifications.uuid}]);
 
-        return res.status(200).json({message: "Password has been successfully reset" });
+        return res.status(200).json({ status: 'success', message: "Password was successfully reset" });
     });
 
     getSiteDetails = expressAsyncHandler(async (req, res) => {

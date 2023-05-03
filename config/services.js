@@ -5,7 +5,9 @@ import tables from '../database/tables.js';
 class Services {
 
   _sitedetails = async () => {
-    return await services._select_all(tables.siteDetails); 
+    const sitedetails = await services._select_all(tables.siteDetails);
+    
+    return sitedetails[0];
   }
 
   _validateEmail = (email) => {

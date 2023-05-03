@@ -20,7 +20,7 @@ router.post('/auth/login-user', login.loginUser)
 router.get('/site-details', controller.getSiteDetails)
 router.get('/get-user', authenticateToken, controller.getLoggedInUser)
 router.post('/auth/update-password', authenticateToken, controller.updatePassword)
-router.post('/auth/reset-password', authenticateToken, controller.resetPassword)
+router.post('/auth/reset-password', controller.resetPassword)
 
 //subscription section
 router.get('/get-plans', SubscriptionController.getPlans)

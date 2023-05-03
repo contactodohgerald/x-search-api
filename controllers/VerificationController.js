@@ -40,7 +40,7 @@ class VerificationController {
             await mailer.pushMail("/../resource/emails/welcome.html", {
                 username: user.username,
                 email: user.email,
-            }, user.email, "Welcome to "+sitename[0].name)
+            }, user.email, "Welcome to "+sitename.name)
         }
         return res.status(201).json({ status: 'success', message: "Your account was successfully activated, login to continue"})
     });
@@ -52,9 +52,17 @@ class VerificationController {
         if(!user_id || !type)
             res.status(400).json({message: "Please fill out All fileds"})
 
-        const user = await services._select(tables.users, "uuid", user_id);  
+        let user;
+        if(type == "reset-password"){
+            user = await services._select(tables.users, "email", user_id); 
+            if(user == null){
+                user = await services._select(tables.users, "username", user_id); 
+            }
+        } else{
+            user = await services._select(tables.users, "uuid", user_id);  
+        }  
         if(user == null) 
-            res.status(400).json({message: "Invalid user id supplied, please try a different user id."}); 
+            res.status(400).json({message: "Invalid user credential supplied, please try a different user credential."}); 
             
         const failedStatus = await services.multiple_select(tables.verification, "WHERE user_id = ? AND verify_type = ? AND status = ?", [user_id, type, 'un-use']); 
         //check if the code for a user exist already and update the status to failed
@@ -74,7 +82,7 @@ class VerificationController {
             }
             services._insert(tables.verification, verificationData);
         }
-        res.status(200).json({message: "A code was successfully created and sent to your mail, please provide the code to continue"});
+        res.status(200).json({status: 'success', message: "A code was successfully created and sent to your mail, please provide the code to continue"});
     });
 
 }
