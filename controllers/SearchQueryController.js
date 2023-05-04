@@ -30,7 +30,7 @@ class SearchQueryController {
         if(ifQueryExist != null){
             //update the searchtrack table and return query answer
             await checks.updateSearchTrack(req.email);
-            return res.status(200).json({message: "Cover Letter Generated", data: {
+            return res.status(200).json({status: 'success', message: "Cover Letter Generated", data: {
                 query: newQuery,
                 answer: ifQueryExist.answer,
             }});
@@ -44,7 +44,7 @@ class SearchQueryController {
         await checks.updateSearchTrack(req.email);
         //add the search result to searches-history tour
         await checks.createSearchHistory(newQuery, answer, req.email);
-        return res.status(200).json({message: "Cover Letter Generated", data: {
+        return res.status(200).json({status: 'success', message: "Cover Letter Generated", data: {
             query: newQuery,
             answer,
         }});

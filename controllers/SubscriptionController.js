@@ -16,12 +16,12 @@ class SubscriptionController {
     })
 
     subscribeNewUser = expressAsyncHandler(async (req, res) => {
-        const {user_id, plan_id, type} = req.body;
+        const {plan_id, type} = req.body;
 
-        if(!user_id || !plan_id || !type)
+        if(!plan_id || !type)
             return res.status(400).json({message: "Please fill out All fileds"});
 
-        const user = await services._select(tables.users, "uuid", user_id); 
+        const user = await services._select(tables.users, "email", req.email); 
         if(user == null)  
             return res.status(400).json({message: "User not found"});
 
@@ -110,7 +110,7 @@ class SubscriptionController {
                 }, user.email, message)
             }
 
-            return res.status(200).json({message: "Your "+message+" was successful", data: {
+            return res.status(200).json({status: 'success', message: "Your "+message+" was successful", data: {
                 uuid: subscribed.uuid,
                 user_id: subscribed.user_id,
                 plan_id: subscribed.plan_id
