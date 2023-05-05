@@ -7,6 +7,7 @@ const tables = {
     subscribePlans: "plans",
     transactions: "transactions",
     siteDetails: "sitedetails",
+    newsLetter: "newsletter",
 }
 
 export default tables;

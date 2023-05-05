@@ -6,7 +6,6 @@ class Services {
 
   _sitedetails = async () => {
     const sitedetails = await services._select_all(tables.siteDetails);
-    
     return sitedetails[0];
   }
 
@@ -49,7 +48,6 @@ class Services {
       return new Promise((resolve, reject) => {
         connection.query(`SELECT * FROM ${table}`, function (error, results) {
           if (error) {
-            console.log('error', error);
             reject(error);
           } else {
             resolve(results);
@@ -57,6 +55,18 @@ class Services {
         });
       });
   }
+
+  _select_array = (table, clause, value) => {
+    return new Promise((resolve, reject) => {
+      connection.query(`SELECT * FROM ${table} WHERE ${clause} = ?`, value, function (error, results) {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(results);
+        }
+      });
+    });
+}
 
   _select = (table, clause, value) => {
     return new Promise((resolve, reject) => {

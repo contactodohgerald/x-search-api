@@ -39,6 +39,7 @@ class LoginController {
 
         const loggedInUser = {
             uuid: user.uuid,
+            name: user.name,
             username: user.username,
             email: user.email,
             ip_address: user.ip_address,

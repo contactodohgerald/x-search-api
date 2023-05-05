@@ -122,6 +122,20 @@ class SubscriptionController {
         }
     })
 
+    getUserTrans = expressAsyncHandler(async (req, res) => {
+        const user = await services._select(tables.users, "email", req.email);
+        if(user != null){
+            const trans = await services._select_array(tables.transactions, "user_id", user.uuid);
+            if(trans.length > 0){
+                return res
+                    .status(200)
+                    .json({ message: "Date was returned", data: trans});
+            }
+
+        }
+        return res.status(400).json({message: "No data was found", data: []});
+    })
+
 }
 
 const subscribe = new SubscriptionController();
