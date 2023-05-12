@@ -4,23 +4,11 @@ import cors from 'cors'
 import dotenv from 'dotenv';
 dotenv.config();
 
-import connection from './database/connection.js';
+import connect from './database/connection.js';
 import handleRoutes from './routes/api.js';
 
 const app = express()
 app.use(cors());
-
-// connect to database
-connection.connect(function(err) {
-    if (err) {
-      console.error('error connecting: ' + err.stack);
-      console.error('Unable to connect to Database');
-      connection.end()
-      return;
-    }
-    console.log('Connected as id ' + connection.threadId);
-    startServer();
-});
 
 //only start the serve if connected to the datebase
 const startServer = () => {
@@ -59,4 +47,12 @@ const startServer = () => {
     //start the server
     http.createServer(app).listen(process.env.SERVER_PORT, () => console.log(`Server running on port ${process.env.SERVER_PORT}`));
 
+}
+
+// connect to database
+if(connect()){
+    console.error('Connected to MongoDB');
+    startServer();
+}else{
+    console.error('Unable to connect to Database');
 }

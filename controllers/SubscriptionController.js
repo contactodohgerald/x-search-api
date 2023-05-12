@@ -1,16 +1,18 @@
 import expressAsyncHandler from "express-async-handler";
-import tables from "../database/tables.js";
-import services from "../config/services.js";
 import flutterwave from "../config/flutterwave.js";
 import mailer from "../config/mailer.js";
+import Plans from "../database/models/plans.model.js";
+import Users from "../database/models/users.model.js";
+import Subscribes from "../database/models/subscribe.model.js";
+import Transactions from "../database/models/transactions.model.js";
+import SearchTracks from "../database/models/_s.track.model.js";
 
 class SubscriptionController {
 
     getPlans = expressAsyncHandler(async (req, res) => {
-        const plans = await services._select_all(tables.subscribePlans); 
+        const plans = await Plans.find()
         if(plans.length < 1)
             return res.status(400).json({message: "Data not found"});
-
 
         return res.status(200).json({message: "Data was returned", data: plans});
     })
@@ -21,50 +23,47 @@ class SubscriptionController {
         if(!plan_id || !type)
             return res.status(400).json({message: "Please fill out All fileds"});
 
-        const user = await services._select(tables.users, "email", req.email); 
+        const user = await Users.findOne({email: req.email});
         if(user == null)  
             return res.status(400).json({message: "User not found"});
 
-        const plans = await services._select(tables.subscribePlans, "uuid", plan_id); 
+        const plans = await Plans.findOne({_id: plan_id});
         if(plans == null)  
             return res.status(400).json({message: "Plan not found"});
     
         if(type == 'flutterwave'){
-            const _uuid = services._uuid();
-
-            await services._insert(tables.subscribe, {
-                uuid: _uuid,
-                user_id: user.uuid,
-                plan_id: plans.uuid,
+            const subs = await Subscribes.create({
+                user_id: user._id,
+                plan_id: plans._id,
                 status: false,
                 plan_status: 'pending',
-            });
+            })
 
             const desc =  "Request on subscription for "+plans.name+" Plan";
+            const id = Math.floor(Math.random() * 10);
             const response = await flutterwave.makePayment({
-                "id": plans.id,
+                "id": id,
                 "amount": plans.amount,
                 "name": user.name,
                 "email": user.email,
-                "uuid": _uuid,
+                "uuid": subs._id,
                 "desc": desc
             });
             if(!response)
                 return res.status(503).json({message: "An error occured, try again later"});
 
             if(response.status == 'success'){
-                await services._insert(tables.transactions, {
-                    uuid: services._uuid(),
-                    user_id: user.uuid,
-                    trans_ref: _uuid,
+                await Transactions.create({
+                    user_id: user._id,
+                    trans_ref: subs._id,
                     amount: plans.amount,
                     currency: 'NGN',
                     description: desc,
                     payment_method: type
-                });
+                }) 
                 return res.status(200).json({message: response.message, data: response.data});
             }
-            return res.status(501).json({message: "Payment could not be completed, try again later"});
+            return res.status(500).json({message: "Payment could not be completed, try again later"});
         }else if(type == 'other'){
             return res.status(200).json({message: "Comming Soon" })
         }else{
@@ -77,8 +76,8 @@ class SubscriptionController {
 
         if(!status || !tx_ref || !transaction_id)
             return res.status(400).json({message: "Please fill out All fileds"});
-
-        const trans = await services._select(tables.transactions, "trans_ref", tx_ref);
+            
+        const trans = await Transactions.findOne({trans_ref: tx_ref});
         if(trans == null)
             return res.status(400).json({message: "Payment was not found"});
 
@@ -86,18 +85,21 @@ class SubscriptionController {
         if(response != null && response.data.status == "successful" 
             && response.data.amount == trans.amount  && response.data.currency == trans.currency){
             // update the status column on the transaction table
-            await services._update(tables.transactions, [{status: 'success'}, {uuid: trans.uuid}]);
+            trans.status = "success";
+            await trans.save();
 
             //get the subsscription object, so we can get the plans object from it
-            const subscribed = await services._select(tables.subscribe, "uuid", trans.trans_ref);
+            const subscribed = await Subscribes.findOne({_id: trans.trans_ref})
             //get the plans object
-            const plans = await services._select(tables.subscribePlans, "uuid", subscribed.plan_id);
+            const plans = await Plans.findOne({_id: subscribed.plan_id})
             //get user object
-            const user = await services._select(tables.users, "uuid", trans.user_id);
+            const user = await Users.findOne({_id: trans.user_id});
             //update the plan status column on the subscription table
-            await services._update(tables.subscribe, [{plan_status: 'ongoing', status: true}, {uuid: subscribed.uuid}]);
+            subscribed.plan_status = "ongoing";
+            subscribed.status = true;
+            await subscribed.save();
             //reset the search-track table of the user
-            await services._update(tables.searchTrack, [{request_count: 0}, {user_id: user.uuid}]);
+            await SearchTracks.findOneAndUpdate({user_id: user._id}, {request_count: 0});
             
             const message = "Subscription to "+plans.name+" plan";
             //send notice mail to user
@@ -111,27 +113,23 @@ class SubscriptionController {
             }
 
             return res.status(200).json({status: 'success', message: "Your "+message+" was successful", data: {
-                uuid: subscribed.uuid,
+                uuid: subscribed._id,
                 user_id: subscribed.user_id,
                 plan_id: subscribed.plan_id
             }});            
         }else{
             // Inform the customer their payment was unsuccessful
-            await services._update(tables.transactions, [{status: 'failed'}, {uuid: trans.uuid}]);
+            trans.status = "failed";
+            await trans.save();
             return res.status(503).json({message: "Payment was not successful, we will retry resolving this issues to be certain it isn`t from out end, thank you for your patience"});
         }
     })
 
     getUserTrans = expressAsyncHandler(async (req, res) => {
-        const user = await services._select(tables.users, "email", req.email);
-        if(user != null){
-            const trans = await services._select_array(tables.transactions, "user_id", user.uuid);
-            if(trans.length > 0){
-                return res
-                    .status(200)
-                    .json({ message: "Date was returned", data: trans});
-            }
-
+        const user = await Users.findOne({email: req.email});
+        const trans = await Transactions.where({user_id: user._id}).find();
+        if(trans.length > 0){
+            return res.status(200).json({ message: "Date was returned", data: trans});
         }
         return res.status(400).json({message: "No data was found", data: []});
     })

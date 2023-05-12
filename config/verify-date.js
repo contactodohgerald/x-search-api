@@ -1,6 +1,5 @@
 import moment from "moment";
-import tables from "../database/tables.js";
-import services from "../config/services.js";
+import Verifications from "../database/models/verification.model.js";
 
 class Verifiable {
 
@@ -13,10 +12,9 @@ class Verifiable {
         const duration = moment.duration(this.now.diff(data.created_at));
         const hoursDiff = Math.floor(duration.asHours());
         if(hoursDiff > 1){
-            await services._update(tables.verification, [{status: 'failed'}, {uuid: data.uuid}]);
+            await Verifications.findOneAndUpdate({_id: data._id}, {status: "failed"})
             return false;
         }
-
         return true;
     }
 

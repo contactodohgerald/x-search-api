@@ -1,12 +1,16 @@
-import mysql from 'mysql'
+import mongoose from "mongoose"
 import dotenv from 'dotenv';
 dotenv.config();
 
-const connection = mysql.createConnection({
-  host: process.env.DATABASE_HOST,
-  user: process.env.DATABASE_USER,
-  password: process.env.DATABASE_PASSWORD,
-  database: process.env.DATABASE_NAME
-});
+mongoose.set('strictQuery', false)
+
+const connection = () => {
+  try {
+    mongoose.connect(process.env.MONGO_URI);
+    return true
+  } catch (error) {
+    return false
+  }
+}
 
 export default connection

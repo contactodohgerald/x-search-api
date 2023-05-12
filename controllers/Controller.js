@@ -1,12 +1,16 @@
 import expressAsyncHandler from "express-async-handler";
 import bcrypt from "bcrypt";
 import services from "../config/services.js";
-import tables from "../database/tables.js";
 import verifiable from "../config/verify-date.js";
+import Users from "../database/models/users.model.js";
+import Verifications from "../database/models/verification.model.js";
+import Subscribes from "../database/models/subscribe.model.js";
+import Plans from "../database/models/plans.model.js";
+import SearchTracks from "../database/models/_s.track.model.js";
 
 class Controller {
   getLoggedInUser = expressAsyncHandler(async (req, res) => {
-    const user = await services._select(tables.users, "email", req.email);
+    const user = await Users.findOne({email: req.email})
     if (user == null)
       return res.status(400).json({ message: "User not found" });
 
@@ -15,7 +19,6 @@ class Controller {
 
   updatePassword = expressAsyncHandler(async (req, res) => {
     const { cur_password, password, c_password } = req.body;
-
     if (!cur_password || !password || !c_password)
       return res.status(400).json({ message: "Please fill out All fileds" });
 
@@ -24,7 +27,7 @@ class Controller {
         .status(400)
         .json({ message: "Password does not match confirm Password" });
 
-    const user = await services._select(tables.users, "email", req.email);
+    const user = await Users.findOne({email: req.email})
     if (user == null)
       return res
         .status(400)
@@ -37,10 +40,8 @@ class Controller {
         .json({ message: "Current password does not match" });
 
     const hashPassword = await bcrypt.hash(password, 10);
-    await services._update(tables.users, [
-      { password: hashPassword },
-      { uuid: user.uuid },
-    ]);
+    user.password = hashPassword;
+    await user.save();
 
     return res.status(200).json({ message: "Password successfully updated" });
   });
@@ -56,51 +57,26 @@ class Controller {
         .status(400)
         .json({ message: "Password does not match confirm Password" });
 
-    const verifications = await services.multiple_select(
-      tables.verification,
-      "WHERE verify_type = ? AND code = ?",
-      ["reset-password", code]
-    );
+    const verifications = await Verifications.where({verify_type: "reset-password", code: code}).findOne();
     if (verifications == null)
-      return res
-        .status(400)
-        .json({
-          message: "Invalid code supplied, please try a different code",
-        });
+      return res.status(400).json({message: "Invalid code supplied, please try a different code"});
 
-    const user = await services._select(
-      tables.users,
-      "uuid",
-      verifications.user_id
-    );
+    const user = await Users.findOne({_id: verifications.user_id});
     if (user == null)
-      return res
-        .status(400)
-        .json({ message: "An error occured, try again later" });
+      return res.status(400).json({ message: "An error occured, try again later" });
 
     const verify_date = await verifiable.verifyDate(verifications);
     if (!verify_date)
-      return res
-        .status(400)
-        .json({
-          message:
-            "This verification code has expired. Please re-send the verification code to try again",
-        });
+      return res.status(400).json({message:"This verification code has expired. Please re-send the verification code to try again"});
 
     const hashPassword = await bcrypt.hash(password, 10);
-    await services._update(tables.users, [
-      { password: hashPassword },
-      { uuid: user.uuid },
-    ]);
+    user.password = hashPassword;
+    await user.save();
 
-    await services._update(tables.verification, [
-      { status: "used" },
-      { uuid: verifications.uuid },
-    ]);
+    verifications.status = "used";
+    await verifications.save();
 
-    return res
-      .status(200)
-      .json({ status: "success", message: "Password was successfully reset" });
+    return res.status(200).json({ status: "success", message: "Password was successfully reset" });
   });
 
   getSiteDetails = expressAsyncHandler(async (req, res) => {
@@ -108,20 +84,16 @@ class Controller {
     if (siteDetails == null)
       return res.status(400).json({ message: "Data not found" });
 
-    return res
-      .status(200)
-      .json({ message: "Date was returned", data: siteDetails });
+    return res.status(200).json({ message: "Date was returned", data: siteDetails });
   });
 
   getUserCurrentPlan = expressAsyncHandler(async (req, res) => {
-    const user = await services._select(tables.users, "email", req.email);
+    const user = await Users.findOne({email: req.email});
     if (user != null) {
-      const getSubscription = await services.multiple_select(
-        tables.subscribe, "WHERE user_id = ? AND plan_status = ?", [user.uuid, "ongoing"]
-      );
+      const getSubscription = await Subscribes.where({user_id: user._id, plan_status: 'ongoing'}).findOne();
       if (getSubscription != null) {
-        const getActivePlan = await services._select(tables.subscribePlans, "uuid", getSubscription.plan_id);
-        const getSearchTrack = await services._select(tables.searchTrack, "user_id", user.uuid);
+        const getActivePlan = await Plans.findOne({_id: getSubscription.plan_id});
+        const getSearchTrack = await SearchTracks.findOne({user_id: user._id});
         return res
             .status(200)
             .json({ message: "Date was returned", data: {...getSubscription, getActivePlan, getSearchTrack}});

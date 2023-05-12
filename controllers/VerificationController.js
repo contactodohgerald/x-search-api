@@ -1,8 +1,9 @@
 import expressAsyncHandler from "express-async-handler";
 import verifiable from "../config/verify-date.js";
 import services from "../config/services.js";
-import tables from "../database/tables.js";
 import mailer from "../config/mailer.js";
+import Verifications from "../database/models/verification.model.js";
+import Users from "../database/models/users.model.js";
 
 class VerificationController {
 
@@ -17,8 +18,7 @@ class VerificationController {
         if(!user_id || !code || !type)
             res.status(400).json({message: "Please fill out All fileds"})
 
-        const responseData = 
-            await services.multiple_select(tables.verification, "WHERE user_id = ? AND code = ? AND status = ?", [user_id, code, 'un-use']);  
+        const responseData = await Verifications.where({user_id, code, status: "un-used"}).findOne()      
         if(responseData == null)
             return res.status(400).json({message: "Invalid code supplied, please check the code and try again"})
 
@@ -26,14 +26,17 @@ class VerificationController {
         if(!verify_date)
             return res.status(400).json({message: "This verification code has expired. Please re-send the verification code to try again"})
 
-        const user = await services._select(tables.users, "uuid", responseData.user_id);   
+        const user = await Users.findOne({_id: responseData.user_id});   
         if(user == null) 
             return res.status(400).json({message: "This code does not belong to a user, please try a different code."});        
         
         //update user verified_at and also update the verification status to used
-        await services._update(tables.users, [{verified_at: this.date}, {uuid: user.uuid}]);
+        user.verified_at = this.date;
+        await user.save();
+
         //update the verification status to used
-        await services._update(tables.verification, [{status: 'used'}, {uuid: responseData.uuid}]);
+        responseData.status = "used";
+        await responseData.save();
 
         if(type == 'account-verification'){
             const sitename = await services._sitedetails();
@@ -42,7 +45,7 @@ class VerificationController {
                 email: user.email,
             }, user.email, "Welcome to "+sitename.name)
         }
-        return res.status(201).json({ status: 'success', message: "Your account was successfully activated, login to continue"})
+        return res.status(200).json({ status: 'success', message: "Your account was successfully activated, login to continue"})
     });
 
     sendVerifyCode = expressAsyncHandler(async (req, res) => {
@@ -54,33 +57,34 @@ class VerificationController {
 
         let user;
         if(type == "reset-password"){
-            user = await services._select(tables.users, "email", user_id); 
+            user = await Users.findOne({email: user_id}); 
             if(user == null){
-                user = await services._select(tables.users, "username", user_id); 
+                user = await Users.findOne({username: user_id});
             }
         } else{
-            user = await services._select(tables.users, "uuid", user_id);  
+            user = await Users.findOne({_id: user_id}); 
         }  
         if(user == null) 
             res.status(400).json({message: "Invalid user credential supplied, please try a different user credential."}); 
-            
-        const failedStatus = await services.multiple_select(tables.verification, "WHERE user_id = ? AND verify_type = ? AND status = ?", [user_id, type, 'un-use']); 
+        
+        const failedStatus = await Verifications.where({user_id: user_id, verify_type: type, status: 'un-used'}).findOne();
         //check if the code for a user exist already and update the status to failed
-        if(failedStatus != null)
-            await services._update(tables.verification, [{status: 'failed'}, {uuid: failedStatus.uuid}]);
+        if(failedStatus != null){
+            failedStatus.status = 'failed';
+            await failedStatus.save();
+        }
 
         const verifyCode = services._verifyCode();
-        const data = {
+        const sentMail = await mailer.pushMail("/../resource/emails/confirm-email.html", {
             name: user.name, 
             message: "Thank you for choosing F-Search, Your one-time verification code is: ",
             code: verifyCode, 
-        };
-        const sentMail = await mailer.pushMail("/../resource/emails/confirm-email.html", data, user.email, "Account Verification!")
+        }, user.email, "Account Verification!")
+
         if(sentMail.accepted.length > 0){
-            const verificationData = {
-                uuid: services._uuid(), user_id: user.uuid, code: verifyCode, verify_type: type
-            }
-            services._insert(tables.verification, verificationData);
+            await Verifications.create({
+               user_id: user._id, code: verifyCode, verify_type: type
+            });
         }
         res.status(200).json({status: 'success', message: "A code was successfully created and sent to your mail, please provide the code to continue"});
     });

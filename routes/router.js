@@ -8,6 +8,7 @@ import controller  from "../controllers/Controller.js";
 import SubscriptionController  from "../controllers/SubscriptionController.js";
 import SearchQueryController  from "../controllers/SearchQueryController.js";
 import contact  from "../controllers/ContactController.js";
+import sitesetup from '../controllers/SiteSetupController.js';
 
 const router = express.Router();
 
@@ -37,6 +38,10 @@ router.post('/search-query-free', SearchQueryController.freeTierGenerateCoverLet
 //contact us
 router.post('/contact-us', contact.sendContactMail)
 router.post('/news-letter', contact.addMailToNewsLetter)
+
+//setup sitesettings 
+router.get('/setup-plans', sitesetup.createPlan)
+router.get('/set-site-details', sitesetup.createSiteDetails)
 
 
 export default router;

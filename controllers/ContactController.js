@@ -1,7 +1,7 @@
 import expressAsyncHandler from "express-async-handler";
 import services from "../config/services.js";
-import tables from "../database/tables.js";
 import mailer from "../config/mailer.js";
+import NewsLetter from "../database/models/newsletter.model.js";
 
 class ContactController {
 
@@ -32,10 +32,9 @@ class ContactController {
     if (!email)
       return res.status(400).json({ message: "Please fill out email filed" });
 
-    await services._insert(tables.newsLetter, {
-        uuid: services._uuid(),
-        email: email
-    });
+    await NewsLetter.create({
+      email
+    })
 
     return res
       .status(200)

@@ -1,8 +1,7 @@
 import expressAsyncHandler from "express-async-handler";
 import checks from "../config/checks.js";
 import _openai from "../config/openai.js";
-import tables from "../database/tables.js";
-import services from "../config/services.js";
+import SearchTracks from "../database/models/_s.track.model.js";
 
 class SearchQueryController {
 
@@ -64,9 +63,9 @@ class SearchQueryController {
         //check if free tier is still up
         const trackCount = await checks.getSearchTrack(ip_address, "free");
         if(trackCount == null) {
-            await services._insert(tables.searchTrack, {
-                uuid: services._uuid(), ip_address, request_count: 1
-            });
+            await SearchTracks.create({
+                ip_address, request_count: 1
+            })
         }else{
             if(trackCount.request_count >= process.env.FREE_TIER){
                 return res.status(400).json({message: "You have exhusted your free tier, Please endevor to subscribed to any of our plans and try again later"});
@@ -74,7 +73,8 @@ class SearchQueryController {
 
             //update the searchtrack table and return query answer
             const newCount = parseInt(trackCount.request_count) + 1;
-            await services._update(tables.searchTrack, [{request_count: newCount}, {ip_address: ip_address}]);
+            trackCount.request_count = newCount; 
+            await trackCount.save();
         }
 
         //first check if the query already exist in the searches table

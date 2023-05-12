@@ -1,5 +1,8 @@
-import tables from "../database/tables.js";
-import services from "./services.js";
+import SearchTracks from "../database/models/_s.track.model.js";
+import Plans from "../database/models/plans.model.js";
+import Searches from "../database/models/search.model.js";
+import Subscribes from "../database/models/subscribe.model.js";
+import Users from "../database/models/users.model.js";
 
 
 class Checks {
@@ -13,54 +16,55 @@ class Checks {
     }
 
     loggedInUser = async (email) => {
-        return await services._select(tables.users, "email", email);
+        return await Users.findOne({email: email});
     } 
     
     getSearchTrack = async (user_id, type = "auth") => {
         if(type == 'auth')
-            return await services._select(tables.searchTrack, "user_id", user_id);
+            return await SearchTracks.findOne({user_id: user_id});
          
-        return await services._select(tables.searchTrack, "ip_address", user_id);    
+        return await SearchTracks.findOne({ip_address: user_id});   
     }
 
     checkIfSubscribed = async (email) => {
-        const user = await this.loggedInUser(email)
-        const subscribed = await services.multiple_select(tables.subscribe, "WHERE user_id = ? AND status = ? AND plan_status = ?", [user.uuid, true, 'ongoing']);  
+        const user = await this.loggedInUser(email) 
+        const subscribed = await Subscribes.where({user_id: user._id, status: true, plan_status: 'ongoing'}).findOne()
         if(subscribed != null){
-            const plans = await services._select(tables.subscribePlans, "uuid", subscribed.plan_id);
-            const trackCount = await this.getSearchTrack(user.uuid);
-
-            if(trackCount.request_count >= plans.total_request)
+            const plans = await Plans.findOne({_id: subscribed.plan_id})
+            const trackCount = await this.getSearchTrack(user._id);
+            if(trackCount.request_count >= plans.total_request){
                 return "exceeded";
-
-            return true;
+            }else{
+                return true;
+            }
         }else{
             return false;
         }
     }
 
     checkIfQueryExist = async (query) => {
-        return await services._select(tables.searches, "query", query);
+        return await Searches.findOne({query: query});
     }
 
     updateSearchTrack = async (email) => {
         const user = await this.loggedInUser(email);
-        const trackCount = await this.getSearchTrack(user.uuid);
-        const newCount = parseInt(trackCount.request_count) + 1;
-        await services._update(tables.searchTrack, [{request_count: newCount}, {user_id: user.uuid}]);
+        const searchTrack = await this.getSearchTrack(user._id);
+        const newCount = parseInt(searchTrack.request_count) + 1;
+        searchTrack.request_count = newCount;
+        await searchTrack.save();
     }
 
     createSearchHistory = async (query, answer, email, type = 'auth') => {
         let user_id;
         if(type == 'auth'){
             const user = await this.loggedInUser(email);
-            user_id = user.uuid;
+            user_id = user._id;
         }else{
             user_id = email;
         }
-        await services._insert(tables.searches, {
-            uuid: services._uuid(), user_id, query, answer
-        }) 
+        await Searches.create({
+            user_id, query, answer
+        })
     }
 
 }
