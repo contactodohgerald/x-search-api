@@ -4,12 +4,12 @@ import authenticateToken from "../middleware/authenticated.js";
 import register  from "../controllers/register.controller.js";
 import verify  from "../controllers/verification.controller.js";
 import login  from "../controllers/login.controller.js";
-import controller  from "../controllers/controller.js";
+import controller  from "../controllers/controllers.js";
 import SubscriptionController  from "../controllers/subscription.controller.js";
 import SearchQueryController  from "../controllers/search.query.controller.js";
 import contact  from "../controllers/contact.controller.js";
 import sitesetup from '../controllers/site.setup.controller.js';
-import payments from '../controllers/payment.controller.js';
+import payments from '../controllers/payment.controller.js'; 
 
 const router = express.Router();
 
