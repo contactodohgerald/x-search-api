@@ -14,17 +14,17 @@ class SiteSetupController {
             {
                 name: "Basics",
                 amount: 300,
-                total_request: 4,
+                total_request: 7,
             },
             {
                 name: "Advance",
                 amount: 500,
-                total_request: 7,
+                total_request: 13,
             },
             {
                 name: "Gold",
                 amount: 900,
-                total_request: 11,
+                total_request: 21,
             }
         ];
         planData.forEach(async (plan) => {

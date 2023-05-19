@@ -1,14 +1,15 @@
 import express from 'express';
 import authenticateToken from "../middleware/authenticated.js";
 
-import register  from "../controllers/RegisterController.js";
-import verify  from "../controllers/VerificationController.js";
-import login  from "../controllers/LoginController.js";
-import controller  from "../controllers/Controller.js";
-import SubscriptionController  from "../controllers/SubscriptionController.js";
-import SearchQueryController  from "../controllers/SearchQueryController.js";
-import contact  from "../controllers/ContactController.js";
-import sitesetup from '../controllers/SiteSetupController.js';
+import register  from "../controllers/register.controller.js";
+import verify  from "../controllers/verification.controller.js";
+import login  from "../controllers/login.controller.js";
+import controller  from "../controllers/controller.js";
+import SubscriptionController  from "../controllers/subscription.controller.js";
+import SearchQueryController  from "../controllers/search.query.controller.js";
+import contact  from "../controllers/contact.controller.js";
+import sitesetup from '../controllers/site.setup.controller.js';
+import payments from '../controllers/payment.controller.js';
 
 const router = express.Router();
 
@@ -42,6 +43,10 @@ router.post('/news-letter', contact.addMailToNewsLetter)
 //setup sitesettings 
 router.get('/setup-plans', sitesetup.createPlan)
 router.get('/set-site-details', sitesetup.createSiteDetails)
+
+
+//payment webhook section
+router.post('/payment-webhook', payments.paymentWebHook)
 
 
 export default router;

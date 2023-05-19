@@ -1,5 +1,4 @@
 import { v4 as uuidv4 } from 'uuid';
-import connection from '../database/connection.js';
 import SiteDetail from '../database/models/sitedetails.model.js';
 
 class Services {
