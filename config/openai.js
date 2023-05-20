@@ -12,7 +12,7 @@ class OpenAiHandler {
         this.openai = new OpenAIApi(configuration);
     }
 
-    generateCoverLetter = async (prompt) => {
+    openapiCoverLetterAPICall = async (prompt) => {
         const response = await this.openai.createCompletion({
             model: "text-davinci-003",
             prompt,

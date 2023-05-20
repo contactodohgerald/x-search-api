@@ -41,8 +41,8 @@ router.post('/contact-us', contact.sendContactMail)
 router.post('/news-letter', contact.addMailToNewsLetter)
 
 //setup sitesettings 
-router.get('/setup-plans', sitesetup.createPlan)
-router.get('/set-site-details', sitesetup.createSiteDetails)
+router.post('/setup-plans', authenticateToken, sitesetup.createPlan)
+router.post('/set-site-details', authenticateToken, sitesetup.createSiteDetails)
 
 
 //payment webhook section

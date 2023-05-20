@@ -5,7 +5,10 @@ const SearchSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "Users",
         type: String,
-        require: true,
+    },
+    ip_address: {
+        type: String,
+        trim: true,
     },
     query: {
         type: String,

@@ -26,11 +26,15 @@ const SiteDetailSchema = new mongoose.Schema({
     },
     free_tier: {
         type: Number,
-        default: 0,
+        trim: true,
     },
     env: {
         type: String,
-        default: 'local',
+        trim: true,
+    },
+    api_call: {
+        type: String,
+        trim: true,
     }
 },{
     timestamps: true

@@ -6,49 +6,44 @@ dotenv.config();
 class SiteSetupController {
 
     createPlan = async (req, res) => {
-        const plans = await Plans.find();
-        if(plans.length > 0)
-            return res.status(200).json({status: 'success', message: "Plans returned successfully", data: plans});
+        const {name, amount, total_request} = req.body
 
-        const planData = [
-            {
-                name: "Basics",
-                amount: 300,
-                total_request: 7,
-            },
-            {
-                name: "Advance",
-                amount: 500,
-                total_request: 13,
-            },
-            {
-                name: "Gold",
-                amount: 900,
-                total_request: 21,
-            }
-        ];
-        planData.forEach(async (plan) => {
-            await Plans.create({
-                name: plan.name, amount: plan.amount, total_request: plan.total_request
-            });
+        const plans = await Plans.where({name: name}).findOne();
+        if(plans){
+            plans.name = name
+            plans.amount = amount
+            plans.total_request = total_request
+            return res.status(200).json({status: 'success', message: "Plan updated successfully", data: plans});
+        }
+
+        const response = await Plans.create({
+            name, amount, total_request
         });
-        res.status(201).json({ status: 'success', message: "Plans was successfully created"})
+        res.status(201).json({ status: 'success', message: "Plans was successfully created", data: response})
     }
 
     createSiteDetails = async (req, res) => {
+        const {email, phone, address, free_tier, api_call} = req.body
+        
+        if(!email || !phone || !address || !free_tier || !api_call)
+            return res.status(400).json({message: "Please provide a all fields"});
+
         const siteDetails = await SiteDetail.findOne();
-        if(siteDetails)
-            return res.status(200).json({status: 'success', message: "Site Details returned successfully", data: siteDetails});
+        if(siteDetails){
+            siteDetails.email = email
+            siteDetails.phone = phone
+            siteDetails.address = address
+            siteDetails.free_tier = free_tier
+            siteDetails.api_call = api_call
+            await siteDetails.save();
+            return res.status(200).json({status: 'success', message: "Site Details updated successfully", data: siteDetails});
+        }
             
-        await SiteDetail.create({
-            name: process.env.APP_NAME,
-            email: process.env.APP_EMAIL,
-            phone: process.env.APP_PHONE,
-            logo_url: process.env.APP_LOGO,
-            address: process.env.APP_ADDRESS,
-            free_tier: process.env.FREE_TIER
+        const response = await SiteDetail.create({
+            email, phone, address, free_tier, api_call, name: process.env.APP_NAME,
+            logo_url: process.env.APP_LOGO, env: process.env.APP_ENV,           
         })
-        res.status(201).json({ status: 'success', message: "Settings was successfully created"})
+        res.status(201).json({ status: 'success', message: "Settings was successfully created", data: response})
     }
 
 }

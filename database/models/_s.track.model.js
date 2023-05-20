@@ -1,15 +1,14 @@
 import mongoose from "mongoose";
 
 const SearchTrackSchema = new mongoose.Schema({
-    user_id: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Users",
+    email: {
         type: String,
-        require: true,
+        trim: true,
     },
     ip_address: {
         type: String,
         trim: true,
+        required: true
     },
     request_count: {
         type: Number,

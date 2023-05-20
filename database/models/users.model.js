@@ -31,9 +31,9 @@ const UserSchema = new mongoose.Schema({
         required: true,
         trim: true,
     },
-    first_login: {
-        type: String,
-        default: 'yes',
+    free_tier_status: {
+        type: Boolean,
+        default: true,
     },
     is_deleted: {
         type: String,
