@@ -47,6 +47,7 @@ router.post('/set-site-details', authenticateToken, sitesetup.createSiteDetails)
 
 //get user search history
 router.post('/user-search-history', authenticateToken, search_history.getUserSearchHistory)
+router.post('/search-track', search_history.getUserSearchTrack)
 
 
 //payment webhook section

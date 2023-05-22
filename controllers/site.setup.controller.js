@@ -23,8 +23,8 @@ class SiteSetupController {
     }
 
     createSiteDetails = async (req, res) => {
-        const {email, phone, address, free_tier, api_call} = req.body
-        
+        const {email, phone, address, free_tier, api_call, facebook, twitter, instagram} = req.body
+ 
         if(!email || !phone || !address || !free_tier || !api_call)
             return res.status(400).json({message: "Please provide a all fields"});
 
@@ -35,12 +35,15 @@ class SiteSetupController {
             siteDetails.address = address
             siteDetails.free_tier = free_tier
             siteDetails.api_call = api_call
+            siteDetails.facebook = facebook
+            siteDetails.twitter = twitter
+            siteDetails.instagram = instagram
             await siteDetails.save();
             return res.status(200).json({status: 'success', message: "Site Details updated successfully", data: siteDetails});
         }
             
         const response = await SiteDetail.create({
-            email, phone, address, free_tier, api_call, name: process.env.APP_NAME,
+            email, phone, address, free_tier, api_call, facebook, twitter, instagram, name: process.env.APP_NAME,
             logo_url: process.env.APP_LOGO, env: process.env.APP_ENV,           
         })
         res.status(201).json({ status: 'success', message: "Settings was successfully created", data: response})

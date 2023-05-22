@@ -35,7 +35,19 @@ const SiteDetailSchema = new mongoose.Schema({
     api_call: {
         type: String,
         trim: true,
-    }
+    },
+    facebook: {
+        type: String,
+        trim: true,
+    },  
+    twitter: {
+        type: String,
+        trim: true,
+    },  
+    instagram: {
+        type: String,
+        trim: true,
+    },
 },{
     timestamps: true
 });

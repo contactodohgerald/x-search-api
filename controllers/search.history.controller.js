@@ -1,6 +1,7 @@
 import expressAsyncHandler from "express-async-handler";
 import checks from "../config/checks.js";
 import Searches from "../database/models/search.model.js";
+import SearchTracks from "../database/models/_s.track.model.js";
 
 class SearchHistoryController {
 
@@ -12,9 +13,19 @@ class SearchHistoryController {
 
         const histories = await Searches.find({ $or: [{ user_id: user._id }, { ip_address }] });
 
-        if(histories.length < 1)  return res.status(400).json({status: 'error', message: "No data was returned"})
+        if(histories.length < 1)  return res.status(400).json({status: 'error', message: "No data was returned", data: []})
 
         return res.status(200).json({status: 'success', message: "Data successfully returned", data: histories});
+    });
+
+    getUserSearchTrack = expressAsyncHandler(async (req, res) => {
+        const ip_address = req.body.ip_address;
+
+        const searchTrack = await SearchTracks.findOne({ ip_address });
+
+        if(!searchTrack)  return res.status(400).json({status: 'error', message: "No data was returned"})
+
+        return res.status(200).json({status: 'success', message: "Data successfully returned", data: searchTrack});
     });
     
 } 
