@@ -32,13 +32,17 @@ class ContactController {
     if (!email)
       return res.status(400).json({ message: "Please fill out email filed" });
 
-    await NewsLetter.create({
-      email
-    })
-
-    return res
-      .status(200)
-      .json({message: "Your email was successfully subscribed to our newsletter" });
+    const newsletter = NewsLetter.findOne({email: email})
+    if(newsletter){
+      newsletter.email = email;
+      await newsletter.save();
+    }else{
+      await NewsLetter.create({
+        email
+      })
+    } 
+    return res.status(201).json({message: "Email successfully subscribed to newsletter" });
+    
   });
  
 }
