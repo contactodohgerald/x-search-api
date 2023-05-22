@@ -10,6 +10,7 @@ import SearchQueryController  from "../controllers/search.query.controller.js";
 import contact  from "../controllers/contact.controller.js";
 import sitesetup from '../controllers/site.setup.controller.js';
 import payments from '../controllers/payment.controller.js'; 
+import search_history from '../controllers/search.history.controller.js';
 
 const router = express.Router();
 
@@ -43,6 +44,9 @@ router.post('/news-letter', contact.addMailToNewsLetter)
 //setup sitesettings 
 router.post('/setup-plans', authenticateToken, sitesetup.createPlan)
 router.post('/set-site-details', authenticateToken, sitesetup.createSiteDetails)
+
+//get user search history
+router.post('/user-search-history', authenticateToken, search_history.getUserSearchHistory)
 
 
 //payment webhook section
