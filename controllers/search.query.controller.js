@@ -36,10 +36,10 @@ class SearchQueryController {
             }           
         }
 
-        //add the search result to searches-history tour
-        await checks.getauthSearchTrack(newQuery, answer, req.email, ip_address);
+        //add the search result to searches model
+        await checks.getauthSearch(newQuery, answer, req.email, ip_address);
 
-        //update the searchtrack table and return query answer
+        //update the searchtrack table
         await checks.updateSearchTrack('auth', req.email, ip_address);
       
         return res.status(201).json({status: 'success', message: "Cover Letter Generated", data: {
@@ -76,7 +76,11 @@ class SearchQueryController {
             }           
         }
 
-        await checks.getfreeSearchTrack(newQuery, answer, ip_address)
+        //add the search result to searches model
+        await checks.getfreeSearch(newQuery, answer, ip_address)
+
+        //update the searchtrack table
+        await checks.updateSearchTrack('free', null, ip_address);
 
         return res.status(201).json({status: 'success', message: "Cover Letter Generated", data: {
             query: newQuery, answer,

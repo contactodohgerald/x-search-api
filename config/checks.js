@@ -85,21 +85,21 @@ class Checks {
         }
     }
 
-    getfreeSearchTrack = async (query, answer, ip_address) => {
-        const _query = await SearchTracks.findOne({query, ip_address})
+    getfreeSearch = async (query, answer, ip_address) => {
+        const _query = await Searches.findOne({query, ip_address})
         if(!_query){
-            await SearchTracks.create({
+            await Searches.create({
                 query, answer, ip_address
             })
         }
         return true
     }
 
-    getauthSearchTrack = async (query, answer, email, ip_address) => {
+    getauthSearch = async (query, answer, email, ip_address) => {
         const user = await this.loggedInUser(email);
-        const _query = await SearchTracks.findOne({query, ip_address, user_id: user._id})
+        const _query = await Searches.findOne({query, ip_address, user_id: user._id})
         if(!_query){
-            await SearchTracks.create({
+            await Searches.create({
                 query, answer, user_id: user._id, ip_address
             })
         }
