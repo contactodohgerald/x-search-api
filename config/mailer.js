@@ -39,7 +39,7 @@ class sendMail{
     const transporter = nodemailer.createTransport({
       host: process.env.STMP_HOST,
       port: process.env.STMP_PORT,
-      secure: false, // true for 465, false for other ports
+      secure: true, // true for 465, false for other ports
       auth: {
         user: process.env.STMP_NAME,
         pass: process.env.STMP_PASSWORD
