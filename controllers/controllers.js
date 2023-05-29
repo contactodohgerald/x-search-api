@@ -97,12 +97,9 @@ class Controller {
     const getActivePlan = await Plans.findOne({_id: getSubscription.plan_id});
     if(!getActivePlan) return res.status(400).json({ message: "You do not have an active plan at this moment" });
 
-    const getSearchTrack = await SearchTracks.findOne({email: user.email});
-
     const data = {
         subscription: getSubscription,
-        active_plan: getActivePlan,
-        search_track: getSearchTrack,
+        active_plan: getActivePlan
     }
     return res.status(200).json({ message: "Date was returned", data});
     
