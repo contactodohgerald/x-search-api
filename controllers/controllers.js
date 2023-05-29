@@ -89,17 +89,24 @@ class Controller {
 
   getUserCurrentPlan = expressAsyncHandler(async (req, res) => {
     const user = await Users.findOne({email: req.email});
-    if (user != null) {
-      const getSubscription = await Subscribes.where({user_id: user._id, plan_status: 'ongoing'}).findOne();
-      if (getSubscription != null) {
-        const getActivePlan = await Plans.findOne({_id: getSubscription.plan_id});
-        const getSearchTrack = await SearchTracks.findOne({user_id: user._id});
-        return res
-            .status(200)
-            .json({ message: "Date was returned", data: {...getSubscription, getActivePlan, getSearchTrack}});
-      }
+    if(!user) return res.status(400).json({ message: "User does not exist" });
+
+    const getSubscription = await Subscribes.where({user_id: user._id, plan_status: 'ongoing'}).findOne();
+    if(!getSubscription) return res.status(400).json({ message: "You do not have an active plan at this moment" });
+
+    const getActivePlan = await Plans.findOne({_id: getSubscription.plan_id});
+    if(!getActivePlan) return res.status(400).json({ message: "You do not have an active plan at this moment" });
+
+    const getSearchTrack = await SearchTracks.findOne({user_id: user._id});
+    if(!getSearchTrack) return res.status(400).json({ message: "You do not have any active search tracks" });
+
+    const data = {
+        subscription: getSubscription,
+        active_plan: getActivePlan,
+        search_track: getSearchTrack,
     }
-    return res.status(400).json({ message: "You do not have an active plan at this moment" });
+    return res.status(200).json({ message: "Date was returned", data});
+    
   });
 }
 
