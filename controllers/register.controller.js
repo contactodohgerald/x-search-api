@@ -40,9 +40,17 @@ class RegisterController {
         })
         if(!createNewUser) return res.status(500).json({message: "An error occured, request couldn't be completed"})
 
-        await SearchTracks.create({
-            email: createNewUser.email, ip_address
-        });
+        const searchTrackExist = SearchTracks.findOne({ip_address});
+        if(!searchTrackExist){
+            await SearchTracks.create({
+                email: createNewUser.email, ip_address
+            });
+        }else{
+            searchTrackExist.request_count = 0;
+            searchTrackExist.email = createNewUser.email;
+            await searchTrackExist.save();
+        }
+        
         //create and send out a verification notification to user 
         const verifyCode = services._verifyCode();
         const sitename = await services._sitedetails()
