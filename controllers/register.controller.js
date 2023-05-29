@@ -41,7 +41,7 @@ class RegisterController {
         if(!createNewUser) return res.status(500).json({message: "An error occured, request couldn't be completed"})
 
         await SearchTracks.create({
-            user_id: createNewUser._id, ip_address
+            email: createNewUser.email, ip_address
         });
         //create and send out a verification notification to user 
         const verifyCode = services._verifyCode();
