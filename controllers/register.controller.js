@@ -35,34 +35,32 @@ class RegisterController {
         }
 
         const hashPassword = await bcrypt.hash(password, 10);
-        
         const createNewUser = await Users.create({
             name: fullname, email, username, password: hashPassword
         })
-        if(createNewUser != null){
-            await SearchTracks.create({
-                user_id: createNewUser._id, ip_address
-            });
-            //create and send out a verification notification to user 
-            const verifyCode = services._verifyCode();
-            const sitename = services._sitedetails()
-            //send out notification
-            const sentMail = await mailer.pushMail("/../resource/emails/confirm-email.html", {
-                name: fullname, 
-                message: "Thank you for choosing "+sitename.name+", Your one-time verification code is: ",
-                code: verifyCode, 
-    
-            }, email, "Account Verification!")
-            //create a verification object on the verification table
-            if(sentMail.accepted.length > 0){
-                await Verifications.create({
-                    user_id: createNewUser._id, code: verifyCode, verify_type: 'account-verification'
-                })
-            }
-            res.status(201).json({ status: 'success', message: "User was successfully created", data: createNewUser})
-        }else{
-           return res.status(500).json({message: "An error occured, request couldn't be completed"})
+        if(!createNewUser) return res.status(500).json({message: "An error occured, request couldn't be completed"})
+
+        await SearchTracks.create({
+            user_id: createNewUser._id, ip_address
+        });
+        //create and send out a verification notification to user 
+        const verifyCode = services._verifyCode();
+        const sitename = await services._sitedetails()
+     
+        //send out notification
+        const sentMail = await mailer.pushMail("/../resource/emails/confirm-email.html", {
+            name: fullname, 
+            message: "Thank you for choosing "+sitename.name+", Your one-time verification code is: ",
+            code: verifyCode, 
+
+        }, email, "Account Verification!")
+        //create a verification object on the verification table
+        if(sentMail.accepted.length > 0){
+            await Verifications.create({
+                user_id: createNewUser._id, code: verifyCode, verify_type: 'account-verification'
+            })
         }
+        res.status(201).json({ status: 'success', message: "User was successfully created", data: createNewUser})
     });
 
 }

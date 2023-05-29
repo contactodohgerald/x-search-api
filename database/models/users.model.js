@@ -15,6 +15,7 @@ const UserSchema = new mongoose.Schema({
     username: {
         type: String,
         trim: true,
+        required: true,
         unique: true,
     },
     notify_type: {
