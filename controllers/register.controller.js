@@ -3,17 +3,22 @@ import bcrypt from "bcrypt";
 import services from "../config/services.js";
 import mailer from "../config/mailer.js";
 
-import Users from "../database/models/users.model.js";
 import SearchTracks from "../database/models/_s.track.model.js";
 import Verifications from "../database/models/verification.model.js";
+import { UserService } from "../services/users.js";
 
 class RegisterController {
+    userInstance
+
+    constructor() {
+        this.userInstance = new UserService()
+    }
 
     createNewUser = expressAsyncHandler(async (req, res) => {
-        const {fullname, email, username, password, c_password, ip_address} = req.body
+        const {fullname, email, username, password, c_password} = req.body
     
         // check if fields are filled 
-        if(!fullname || !email || !username || !password || !c_password || !ip_address)
+        if(!fullname || !email || !username || !password || !c_password)
             return res.status(400).json({message: "Please fill out All fileds"})
     
         if(password != c_password){
@@ -21,35 +26,29 @@ class RegisterController {
         }
     
         // check if email already in database 
-        const emailExit = await Users.findOne({email: email});
+        const emailExit = await this.userInstance.getUser({email: email})
         if(emailExit != null){
             if(emailExit.email == email)
                return res.status(400).json({message: "Email already in use, please try another"}) 
         }
 
         // check if username already in database 
-        const usernameExit = await Users.findOne({username: username});
+        const usernameExit = await this.userInstance.getUser({username: username})
         if(usernameExit != null){
             if(usernameExit.username == username)
                 return res.status(400).json({message: "Username already in use, please try another"})
         }
 
         const hashPassword = await bcrypt.hash(password, 10);
-        const createNewUser = await Users.create({
+        const createNewUser = await this.userInstance.saveUser({
             name: fullname, email, username, password: hashPassword
         })
+
         if(!createNewUser) return res.status(500).json({message: "An error occured, request couldn't be completed"})
 
-        const searchTrackExist = SearchTracks.findOne({ip_address});
-        if(!searchTrackExist){
-            await SearchTracks.create({
-                email: createNewUser.email, ip_address
-            });
-        }else{
-            searchTrackExist.request_count = 0;
-            searchTrackExist.email = createNewUser.email;
-            await searchTrackExist.save();
-        }
+        await SearchTracks.create({
+            email: createNewUser.email, ip_address: req.ip
+        });
         
         //create and send out a verification notification to user 
         const verifyCode = services._verifyCode();

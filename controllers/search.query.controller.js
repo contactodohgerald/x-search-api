@@ -7,9 +7,10 @@ import bard from "../config/bard.js";
 class SearchQueryController {
 
     authGenerateCoverLetter = expressAsyncHandler(async (req, res) => {
-        const { query, ip_address } = req.body;
+        const { query } = req.body;
         const sitedetails = await services._sitedetails()
         const newQuery = query.toLowerCase()
+        const ip_address = req.ip
 
         //run all the neccessary validations
         const validates = checks.validateCoverLetter(newQuery, ip_address);
@@ -49,8 +50,9 @@ class SearchQueryController {
 
     freeTierGenerateCoverLetter = expressAsyncHandler(async (req, res) => {
         const sitedetails = await services._sitedetails()
-        const { query, ip_address } = req.body;
+        const { query } = req.body;
         const newQuery = query.toLowerCase()
+        const ip_address = req.ip
 
         //run all the neccessary validations
         const validates = checks.validateCoverLetter(newQuery, ip_address);

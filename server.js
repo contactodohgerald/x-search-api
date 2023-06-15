@@ -51,7 +51,7 @@ const startServer = () => {
 
 // connect to database
 if(connect()){
-    console.error('Connected to MongoDB');
+    console.info('Connected to MongoDB');
     startServer();
 }else{
     console.error('Unable to connect to Database');

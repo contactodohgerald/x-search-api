@@ -30,9 +30,7 @@ class PaymentController {
         }
         return res.status(401).json({message: "An error occured"});
     })
-
     
-
 }
 
 const payments = new PaymentController();
